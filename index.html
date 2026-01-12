@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Login Facebook</title>
 </head>
 <body>
@@ -13,17 +13,20 @@
   <pre id="output"></pre>
 
   <!-- Facebook SDK -->
+  <div id="fb-root"></div>
   <script>
-    window.fbAsyncInit = function () {
+    // Inizializzazione SDK
+    window.fbAsyncInit = function() {
       FB.init({
-        appId: '1869824801076533|bQykIYSzsi8KZwciDfk_ItOYS00',
-        cookie: true,
-        xfbml: false,
-        version: 'v19.0'
+        appId      : '1869824801076533', // SOLO App ID, senza pipe o token
+        cookie     : true,
+        xfbml      : false,
+        version    : 'v19.0'
       });
     };
 
-    (function (d, s, id) {
+    // Caricamento SDK in modo asincrono
+    (function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
@@ -31,16 +34,16 @@
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 
+    // Funzione login
     function login() {
-      FB.login(function (response) {
+      FB.login(function(response) {
         if (response.authResponse) {
-          FB.api('/me', { fields: 'id,name' }, function (user) {
+          FB.api('/me', { fields: 'id,name' }, function(user) {
             document.getElementById('output').textContent =
               JSON.stringify(user, null, 2);
           });
         } else {
-          document.getElementById('output').textContent =
-            'Login annullato';
+          document.getElementById('output').textContent = 'Login annullato';
         }
       }, { scope: 'public_profile' });
     }
