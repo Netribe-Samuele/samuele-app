@@ -1,2 +1,50 @@
-<h1>Condizioni d'uso</h1>
-<p>Questa applicazione utilizza l'API Graph di Meta per fornire funzionalità di analisi e gestione. L'utente accetta di utilizzare l'app in conformità con le policy di Meta e con le leggi vigenti.</p>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login Facebook</title>
+</head>
+<body>
+
+  <h1>Login con Facebook</h1>
+
+  <button onclick="login()">Accedi con Facebook</button>
+
+  <pre id="output"></pre>
+
+  <!-- Facebook SDK -->
+  <script>
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '1869824801076533|bQykIYSzsi8KZwciDfk_ItOYS00',
+        cookie: true,
+        xfbml: false,
+        version: 'v19.0'
+      });
+    };
+
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/it_IT/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    function login() {
+      FB.login(function (response) {
+        if (response.authResponse) {
+          FB.api('/me', { fields: 'id,name' }, function (user) {
+            document.getElementById('output').textContent =
+              JSON.stringify(user, null, 2);
+          });
+        } else {
+          document.getElementById('output').textContent =
+            'Login annullato';
+        }
+      }, { scope: 'public_profile' });
+    }
+  </script>
+
+</body>
+</html>
