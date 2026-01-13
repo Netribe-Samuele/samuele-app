@@ -29,100 +29,91 @@ body {
   text-align: center;
 }
 
-/* Titolo */
-h1 {
-  color: #1877F2;
-  margin: 0 0 12px;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+/* Reset minimo */
+* {
+  box-sizing: border-box;
 }
 
-/* Sottotitolo */
-.subtitle {
-  font-size: 15px;
-  color: #606770;
-  margin-bottom: 28px;
+
+/* Card principale */
+body > * {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* Titolo */
+h1 {
+  color: #1877f2;
+  text-align: center;
+  margin-bottom: 35px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 /* Bottone Facebook */
 #fb-login-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  background: linear-gradient(135deg, #1877F2, #145dbf);
-  color: #ffffff;
+  display: block;
+  width: 100%;
+  background: linear-gradient(180deg, #1877f2, #145dbf);
+  color: #fff;
   border: none;
   padding: 14px 28px;
   font-size: 16px;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-
-  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.35);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
+  box-shadow: 0 10px 20px rgba(24, 119, 242, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 #fb-login-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(24, 119, 242, 0.45);
+  box-shadow: 0 14px 26px rgba(24, 119, 242, 0.35);
 }
 
 #fb-login-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.35);
+  box-shadow: 0 8px 16px rgba(24, 119, 242, 0.25);
 }
 
 #fb-login-btn:disabled {
-  background: linear-gradient(135deg, #a3baf2, #8aa5e6);
-  box-shadow: none;
+  opacity: 0.6;
   cursor: not-allowed;
-  opacity: 0.85;
+  box-shadow: none;
 }
 
 /* Output JSON */
 #output {
-  margin-top: 28px;
+  margin-top: 30px;
   padding: 18px 20px;
-  width: 100%;
-  max-height: 320px;
-  overflow: auto;
-
-  background: #f9fafb;
-  border: 1px solid #e4e6eb;
-  border-radius: 10px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 13px;
-  line-height: 1.45;
-  text-align: left;
-
+  background: #ffffff;
+  border-radius: 12px;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  border: 1px solid #e4e6eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  max-height: 420px;
+  overflow: auto;
 }
 
-/* Scrollbar elegante (Chrome / Edge) */
+/* Scrollbar più elegante (Chrome / Edge) */
 #output::-webkit-scrollbar {
   width: 8px;
 }
 
 #output::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-#output::-webkit-scrollbar-thumb {
-  background-color: #ccd0d5;
+  background: #f0f2f5;
   border-radius: 10px;
 }
 
-/* Footer informativo */
-.footer {
-  margin-top: 20px;
-  font-size: 12px;
-  color: #8a8d91;
+#output::-webkit-scrollbar-thumb {
+  background: #cbd3e6;
+  border-radius: 10px;
+}
+
+#output::-webkit-scrollbar-thumb:hover {
+  background: #b1bddb;
 }
