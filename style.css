@@ -39,8 +39,12 @@ h1 {
   color: #1877f2;
   font-size: 32px;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 40px;
   letter-spacing: -0.5px;
+}
+
+.subtitle{
+  margin-bottom: 30px;
 }
 
 /* Bottone Facebook allargato */
