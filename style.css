@@ -45,8 +45,8 @@ h1 {
 
 .subtitle{
   display: block;
-  margin-bottom: 30px;
-  margin-top: 20px;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 
 /* Bottone Facebook allargato */
