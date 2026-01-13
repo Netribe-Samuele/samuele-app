@@ -44,17 +44,17 @@
         return;
       }
 
-      // Recupero Pagine gestite
       FB.api('/me/accounts', function(pages) {
         document.getElementById('output').textContent =
           JSON.stringify(pages, null, 2);
       });
 
     }, {
-      scope: 'pages_show_list,pages_read_engagement,pages_read_user_content, email, id, name'
+      scope: 'pages_show_list,pages_read_engagement,pages_read_user_content'
     });
   });
 </script>
+
 
 </body>
 </html>
