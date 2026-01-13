@@ -46,6 +46,7 @@ h1 {
 /* Bottone Facebook allargato */
 #fb-login-btn {
   display: block;
+  margin-top: 30px;
   width: 100%;
   max-width: 100%;
   background: linear-gradient(180deg, #1877f2, #145dbf);
