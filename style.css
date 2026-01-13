@@ -1,6 +1,8 @@
 /* Reset leggero */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 /* Background generale */
@@ -12,68 +14,56 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  margin: 0;
-  padding: 24px;
+  padding: 40px 20px;
 }
 
-/* Card centrale */
+/* Card centrale più spaziosa */
 .container {
   background: #ffffff;
   width: 100%;
-  max-width: 520px;
-  padding: 36px 32px 32px;
-  border-radius: 14px;
+  max-width: 600px;
+  padding: 48px 40px;
+  border-radius: 16px;
   box-shadow:
-    0 10px 25px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.04);
+    0 14px 30px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.05);
   text-align: center;
-}
-
-/* Reset minimo */
-* {
-  box-sizing: border-box;
-}
-
-
-/* Card principale */
-body > * {
-  width: 100%;
-  max-width: 860px;
 }
 
 /* Titolo */
 h1 {
   color: #1877f2;
-  text-align: center;
-  margin-bottom: 35px;
+  font-size: 32px;
   font-weight: 700;
+  margin-bottom: 40px;
   letter-spacing: -0.5px;
 }
 
-/* Bottone Facebook */
+/* Bottone Facebook allargato */
 #fb-login-btn {
   display: block;
   width: 100%;
+  max-width: 100%;
   background: linear-gradient(180deg, #1877f2, #145dbf);
   color: #fff;
   border: none;
-  padding: 14px 28px;
-  font-size: 16px;
+  padding: 16px 32px;
+  font-size: 18px;
   font-weight: 600;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(24, 119, 242, 0.25);
+  box-shadow: 0 12px 28px rgba(24, 119, 242, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 #fb-login-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(24, 119, 242, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(24, 119, 242, 0.35);
 }
 
 #fb-login-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 8px 16px rgba(24, 119, 242, 0.25);
+  box-shadow: 0 12px 28px rgba(24, 119, 242, 0.25);
 }
 
 #fb-login-btn:disabled {
@@ -82,26 +72,26 @@ h1 {
   box-shadow: none;
 }
 
-/* Output JSON */
+/* Output JSON più largo e leggibile */
 #output {
-  margin-top: 30px;
-  padding: 18px 20px;
+  margin-top: 36px;
+  padding: 20px 24px;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 14px;
   font-family: "JetBrains Mono", "Courier New", monospace;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
   border: 1px solid #e4e6eb;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  max-height: 420px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  max-height: 480px;
   overflow: auto;
 }
 
-/* Scrollbar più elegante (Chrome / Edge) */
+/* Scrollbar elegante */
 #output::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 #output::-webkit-scrollbar-track {
@@ -116,4 +106,11 @@ h1 {
 
 #output::-webkit-scrollbar-thumb:hover {
   background: #b1bddb;
+}
+
+/* Footer opzionale per note o stato */
+.footer {
+  margin-top: 28px;
+  font-size: 13px;
+  color: #8a8d91;
 }
