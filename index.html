@@ -3,56 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <title>Meta Graph API Dashboard</title>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-    .page-list { margin: 20px 0; }
-    .page-item { 
-      background: #f5f5f5; 
-      padding: 10px; 
-      margin: 5px 0; 
-      border-radius: 4px; 
-      cursor: pointer;
+    /* Stili aggiuntivi specifici per GitHub Pages */
+    .github-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #24292e;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    .page-item:hover { background: #e0e0e0; }
-    .page-item.active { background: #007bff; color: white; }
-    .section { margin: 30px 0; }
-    .btn { 
-      background: #007bff; 
-      color: white; 
-      border: none; 
-      padding: 10px 20px; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      margin: 5px;
-    }
-    .btn:hover { background: #0056b3; }
-    .btn:disabled { background: #ccc; cursor: not-allowed; }
-    .output { 
-      background: #f8f9fa; 
-      padding: 15px; 
-      border-radius: 5px; 
-      margin-top: 20px;
-      max-height: 500px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
+    
+    .deploy-note {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
       font-size: 14px;
     }
-    .status { 
-      padding: 10px; 
-      margin: 10px 0; 
-      border-radius: 4px; 
+    
+    .deploy-note a {
+      color: #0366d6;
+      text-decoration: none;
+      font-weight: 600;
     }
-    .status.success { background: #d4edda; color: #155724; }
-    .status.error { background: #f8d7da; color: #721c24; }
-    .status.info { background: #d1ecf1; color: #0c5460; }
-    .loading { color: #6c757d; font-style: italic; }
+    
+    .deploy-note a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📱 Meta Graph API Dashboard</h1>
+
+    <div class="container">
+    <h1>Meta Graph API Dashboard</h1>
     
     <!-- Sezione 1: Login Facebook -->
     <div class="section">
@@ -71,14 +61,29 @@
     
     <!-- Sezione 3: Azioni disponibili -->
     <div class="section" id="actions-section" style="display: none;">
-      <h2>3. Azioni disponibili</h2>
-      <div>
-        <button class="btn" onclick="listPostIds()">📋 Lista ID Post</button>
-        <button class="btn" onclick="getPostsWithComments()">📝 Ultimi Post con Commenti</button>
-        <input type="text" id="post-id-input" placeholder="ID Post (es: 123_456)" style="padding: 8px; margin: 5px;">
-        <button class="btn" onclick="readSpecificPost()">🔍 Leggi Post Specifico</button>
-      </div>
-      <div id="action-status" class="status"></div>
+        <h2>3. Azioni disponibili</h2>
+        <div class="actions-grid">
+
+            <div class="action-row post-specific-container">
+                <button class="btn" onclick="listPostIds()"> Lista ID Post</button>
+            </div>
+
+            <div class="action-row post-specific-container">
+                <button class="btn" onclick="getPostsWithComments()"> Ultimi Post con Commenti</button>
+            </div>
+
+            <div class="action-row post-specific-container">
+                <div class="post-specific-wrapper">
+                    <button class="btn" onclick="readSpecificPost()"> Leggi Post Specifico</button>
+                    <div class="post-input-wrapper">
+                        <input type="text" id="post-id-input" placeholder="ID Post (es: 123_456)">
+                        <small class="input-hint">Incolla l'ID del post Facebook</small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    <div id="action-status" class="status"></div>
     </div>
     
     <!-- Sezione 4: Output -->
@@ -95,11 +100,13 @@
 
   <!-- Facebook SDK -->
   <div id="fb-root"></div>
+
   <script>
-    // Configurazione
-    const API_BASE_URL = window.location.origin; // Usa lo stesso host del frontend
+    // ========== CONFIGURAZIONE ==========
+    // ⚠️ SOSTITUISCI QUESTO CON IL TUO URL BACKEND (es. da Render)
+    const API_BASE_URL = "https://meta-graph-api-backend.onrender.com/";
     
-    // Stato dell'applicazione
+    // ========== STATO APPLICAZIONE ==========
     let userAccessToken = '';
     let selectedPage = null;
     let pages = [];
@@ -107,7 +114,7 @@
     // ========== INIZIALIZZAZIONE FACEBOOK SDK ==========
     window.fbAsyncInit = function() {
       FB.init({
-        appId: '893895106664116', // Sostituisci con il tuo App ID se necessario
+        appId: '893895106664116',
         cookie: true,
         xfbml: false,
         version: 'v19.0'
@@ -123,7 +130,7 @@
       });
     };
 
-    // Carica SDK
+    // Carica SDK Facebook
     (function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
@@ -170,12 +177,20 @@
       const container = document.getElementById('page-list');
       container.innerHTML = '';
       
+      if (pages.length === 0) {
+        container.innerHTML = '<div class="status warning">Nessuna pagina trovata. Assicurati di essere amministratore di almeno una pagina Facebook.</div>';
+        return;
+      }
+      
       pages.forEach(page => {
         const div = document.createElement('div');
         div.className = 'page-item';
         div.innerHTML = `
-          <strong>${page.name}</strong> (${page.id})
-          <br><small>Token: ${page.access_token.substring(0, 20)}...</small>
+          <div class="page-info">
+            <strong>${page.name}</strong>
+            <div class="page-id">ID: ${page.id}</div>
+          </div>
+          <div class="page-token">Token: ${page.access_token.substring(0, 25)}...</div>
         `;
         
         div.onclick = () => selectPage(page);
@@ -186,12 +201,12 @@
     function selectPage(page) {
       selectedPage = page;
       
-      // Rimuovi classe active da tutte le pagine
+      // Rimuovi selezione da tutte le pagine
       document.querySelectorAll('.page-item').forEach(el => {
         el.classList.remove('active');
       });
       
-      // Aggiungi classe active alla pagina selezionata
+      // Aggiungi selezione alla pagina cliccata
       event.target.closest('.page-item').classList.add('active');
       
       // Mostra pagina selezionata
@@ -201,7 +216,7 @@
       
       // Mostra sezione azioni
       document.getElementById('actions-section').style.display = 'block';
-      showActionStatus('Seleziona un\'azione dalla barra sopra', 'info');
+      showActionStatus('Inserisci un ID post e clicca "Leggi Post Specifico"', 'info');
     }
 
     // ========== CHIAMATE AL BACKEND ==========
@@ -211,14 +226,21 @@
       try {
         const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           body: JSON.stringify(data)
         });
         
+        if (!response.ok) {
+          throw new Error(`Errore ${response.status}: ${response.statusText}`);
+        }
+        
         const result = await response.json();
         
-        if (!response.ok) {
-          throw new Error(result.error || 'Errore del server');
+        if (result.error) {
+          throw new Error(result.error);
         }
         
         showActionStatus('Operazione completata con successo!', 'success');
@@ -229,50 +251,18 @@
       }
     }
 
-    // ========== AZIONI DISPONIBILI ==========
-    async function listPostIds() {
-      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
-      
-      try {
-        const result = await callBackend('list-post-ids', {
-          pageAccessToken: selectedPage.access_token,
-          page: selectedPage.id,
-          limit: 25
-        });
-        
-        document.getElementById('output').textContent = 
-          `ID Post trovati: ${result.ids.length}\n\n` +
-          JSON.stringify(result.ids, null, 2);
-      } catch (error) {
-        document.getElementById('output').textContent = `Errore: ${error.message}`;
-      }
-    }
-
-    async function getPostsWithComments() {
-      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
-      
-      try {
-        const result = await callBackend('posts-with-comments', {
-          pageAccessToken: selectedPage.access_token,
-          page: selectedPage.id,
-          postLimit: 5,
-          commentLimit: 10
-        });
-        
-        document.getElementById('output').textContent = 
-          `Post totali: ${result.totalPosts}\n` +
-          `Post con commenti: ${result.postsWithComments.length}\n\n` +
-          JSON.stringify(result.postsWithComments, null, 2);
-      } catch (error) {
-        document.getElementById('output').textContent = `Errore: ${error.message}`;
-      }
-    }
-
+    // ========== AZIONI ==========
     async function readSpecificPost() {
-      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
+      if (!selectedPage) {
+        showActionStatus('Seleziona prima una pagina', 'error');
+        return;
+      }
       
       const postId = document.getElementById('post-id-input').value.trim();
-      if (!postId) return showActionStatus('Inserisci un ID post', 'error');
+      if (!postId) {
+        showActionStatus('Inserisci un ID post', 'error');
+        return;
+      }
       
       try {
         const result = await callBackend('read-post', {
@@ -281,16 +271,16 @@
         });
         
         const output = `
-POST:
+=== POST ===
 ${JSON.stringify(result.post, null, 2)}
 
-COMMENTI (${result.comments.length}):
+=== COMMENTI (${result.totalComments}) ===
 ${JSON.stringify(result.comments, null, 2)}
         `;
         
         document.getElementById('output').textContent = output;
       } catch (error) {
-        document.getElementById('output').textContent = `Errore: ${error.message}`;
+        document.getElementById('output').textContent = `Errore: ${error.message}\n\nAssicurati che:\n1. Il backend sia online\n2. L'ID post sia corretto\n3. Il token della pagina sia valido`;
       }
     }
 
@@ -307,17 +297,39 @@ ${JSON.stringify(result.comments, null, 2)}
       element.className = `status ${type}`;
     }
 
+    function clearOutput() {
+      document.getElementById('output').textContent = 'Output pulito.';
+    }
+
     // Controlla stato server all'avvio
     window.addEventListener('DOMContentLoaded', async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/health`);
+        const response = await fetch(`${API_BASE_URL}/api/health`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
         if (response.ok) {
-          document.getElementById('server-status').textContent = 'Connesso';
-          document.getElementById('server-status').style.color = 'green';
+          const data = await response.json();
+          document.getElementById('server-status').textContent = `Connesso (${data.service})`;
+          document.getElementById('server-status').className = 'connected';
+        } else {
+          throw new Error('Server non raggiungibile');
         }
-      } catch {
-        document.getElementById('server-status').textContent = 'Non connesso';
-        document.getElementById('server-status').style.color = 'red';
+      } catch (error) {
+        document.getElementById('server-status').textContent = 'Non connesso - Configura il backend';
+        document.getElementById('server-status').className = 'disconnected';
+        
+        // Mostra avviso
+        const warning = document.createElement('div');
+        warning.className = 'status error';
+        warning.innerHTML = `
+          <strong>Backend non configurato!</strong><br>
+          1. Hosta il backend su <a href="https://render.com" target="_blank">Render.com</a><br>
+          2. Aggiorna la variabile <code>API_BASE_URL</code> nel codice<br>
+          3. Ricarica la pagina
+        `;
+        document.querySelector('.deploy-note').appendChild(warning);
       }
     });
   </script>
