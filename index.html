@@ -324,30 +324,8 @@ async function readSpecificPost() {
   
   try {
     // Per ora usa dati mock, ma puoi scommentare la chiamata al backend
-    const mockData = {
-      post: {
-        id: postId,
-        message: "Questo è un post di esempio per dimostrare il funzionamento dell'applicazione.",
-        created_time: new Date().toISOString(),
-        permalink_url: `https://facebook.com/${postId}`
-      },
-      comments: [
-        {
-          id: "111111111",
-          message: "Bellissimo post!",
-          created_time: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: "222222222",
-          message: "Grazie per la condivisione",
-          created_time: new Date(Date.now() - 1800000).toISOString()
-        }
-      ],
-      totalComments: 2
-    };
     
-    // Se vuoi usare il backend vero, scommenta queste righe:
-    /*
+   
     const response = await fetch(`${API_BASE_URL}/api/read-post`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -359,7 +337,7 @@ async function readSpecificPost() {
     
     if (!response.ok) throw new Error('Errore backend');
     const mockData = await response.json();
-    */
+  
     
     const output = `📝 POST
 ID: ${mockData.post.id}
