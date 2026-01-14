@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    /* Stili aggiuntivi specifici per GitHub Pages */
     .github-badge {
       position: absolute;
       top: 15px;
@@ -103,7 +102,7 @@
 
   <script>
     // ========== CONFIGURAZIONE ==========
-    const API_BASE_URL = "https://meta-graph-api-backend.onrender.com/";
+    const API_BASE_URL = "https://meta-graph-api-backend.onrender.com"; // Rimosso slash finale
     
     // ========== STATO APPLICAZIONE ==========
 let selectedPage = null;
@@ -237,20 +236,27 @@ async function listPostIds() {
   showActionStatus('Caricamento post...', 'info');
   
   try {
-    // Simulazione - in realtà dovrebbe chiamare il backend
-    const mockData = {
-      ids: [
-        "123456789_987654321",
-        "123456789_987654322", 
-        "123456789_987654323",
-        "123456789_987654324"
-      ],
-      total: 4
-    };
+    const response = await fetch(`${API_BASE_URL}/api/list-post-ids`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pageAccessToken: selectedPage.access_token,
+        page: selectedPage.id,
+        mode: 'published_posts',
+        limit: 50
+      })
+    });
     
-    const output = `📋 ID POST TROVATI (${mockData.total})
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Errore ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    const output = `📋 ID POST TROVATI (${result.ids.length})
 ${'─'.repeat(50)}
-${mockData.ids.map(id => `• ${id}`).join('\n')}
+${result.ids.map(id => `• ${id}`).join('\n')}
 ${'─'.repeat(50)}
 ℹ️ Per leggere un post, copia un ID e incollalo nel campo sotto.`;
     
@@ -272,32 +278,46 @@ async function getPostsWithComments() {
   showActionStatus('Caricamento post con commenti...', 'info');
   
   try {
-    // Simulazione
-    const mockData = {
-      posts: [
-        {
-          id: "123456789_987654321",
-          message: "Ecco il nostro ultimo aggiornamento! 🎉",
-          created_time: "2024-01-15T10:30:00+0000",
-          comments: 3
-        },
-        {
-          id: "123456789_987654322",
-          message: "Nuovo prodotto in arrivo...",
-          created_time: "2024-01-14T15:20:00+0000", 
-          comments: 5
-        }
-      ]
-    };
+    const response = await fetch(`${API_BASE_URL}/api/posts-with-comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pageAccessToken: selectedPage.access_token,
+        page: selectedPage.id,
+        postLimit: 5,
+        commentLimit: 10
+      })
+    });
     
-    const output = mockData.posts.map((post, index) => {
-      return `📝 POST ${index + 1}
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Errore ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    let output = `📝 POST CON COMMENTI (${result.totalPosts || result.postsWithComments.length})
+${'─'.repeat(50)}`;
+    
+    if (result.postsWithComments && result.postsWithComments.length > 0) {
+      result.postsWithComments.forEach((post, index) => {
+        output += `\n\nPOST ${index + 1}
 ID: ${post.id}
 Data: ${new Date(post.created_time).toLocaleString('it-IT')}
-Messaggio: ${post.message}
-Commenti: ${post.comments}
-${'─'.repeat(50)}`;
-    }).join('\n\n');
+Messaggio: ${post.message ? post.message.substring(0, 100) + (post.message.length > 100 ? '...' : '') : '(Nessun messaggio)'}
+Commenti: ${post.comments ? post.comments.length : 0}`;
+        
+        if (post.comments && post.comments.length > 0) {
+          post.comments.slice(0, 3).forEach((comment, commentIndex) => {
+            output += `\n  💬 ${commentIndex + 1}: ${comment.message ? comment.message.substring(0, 50) + (comment.message.length > 50 ? '...' : '') : '(Nessun testo)'}`;
+          });
+          if (post.comments.length > 3) output += `\n  ... e altri ${post.comments.length - 3} commenti`;
+        }
+        output += `\n${'─'.repeat(50)}`;
+      });
+    } else {
+      output += '\nNessun post con commenti trovato.';
+    }
     
     document.getElementById('output').textContent = output;
     showActionStatus('✅ Post con commenti caricati', 'success');
@@ -322,10 +342,7 @@ async function readSpecificPost() {
   
   showActionStatus('Caricamento post...', 'info');
   
-  try {
-    // Per ora usa dati mock, ma puoi scommentare la chiamata al backend
-    
-   
+  try { 
     const response = await fetch(`${API_BASE_URL}/api/read-post`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -335,25 +352,32 @@ async function readSpecificPost() {
       })
     });
     
-    if (!response.ok) throw new Error('Errore backend');
-    const mockData = await response.json();
-  
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Errore ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.error) {
+      throw new Error(result.error);
+    }
     
     const output = `📝 POST
-ID: ${mockData.post.id}
-Data: ${new Date(mockData.post.created_time).toLocaleString('it-IT')}
-URL: ${mockData.post.permalink_url}
-Messaggio: ${mockData.post.message}
+ID: ${result.post.id}
+Data: ${new Date(result.post.created_time).toLocaleString('it-IT')}
+URL: ${result.post.permalink_url || 'N/A'}
+Messaggio: ${result.post.message || '(Nessun messaggio)'}
 ${'─'.repeat(50)}
-💬 COMMENTI (${mockData.totalComments})
+💬 COMMENTI (${result.totalComments || result.comments?.length || 0})
 ${'─'.repeat(50)}
-${mockData.comments.map((comment, index) => {
+${result.comments && result.comments.length > 0 ? result.comments.map((comment, index) => {
   return `#${index + 1}
 ID: ${comment.id}
 Data: ${new Date(comment.created_time).toLocaleString('it-IT')}
-Testo: ${comment.message}
+Testo: ${comment.message || '(Commento vuoto)'}
 ${'─'.repeat(30)}`;
-}).join('\n\n')}`;
+}).join('\n\n') : 'Nessun commento trovato.'}`;
     
     document.getElementById('output').textContent = output;
     showActionStatus('✅ Post caricato con successo', 'success');
@@ -365,8 +389,9 @@ Messaggio: ${error.message}
 💡 SUGGERIMENTI:
 1. Verifica che il backend sia online: ${API_BASE_URL}
 2. Controlla che l'ID post sia corretto
-3. Assicurati di avere i permessi sulla pagina`;
-    
+3. Assicurati di avere i permessi sulla pagina
+4. Il token della pagina potrebbe essere scaduto`;
+
     document.getElementById('output').textContent = errorMessage;
     showActionStatus('❌ Errore', 'error');
   }
@@ -406,10 +431,17 @@ async function checkBackendStatus() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/health`);
     if (response.ok) {
+      const data = await response.json();
+      document.getElementById('server-status').textContent = 'Connesso';
+      document.getElementById('server-status').style.color = 'green';
       showStatus('✅ Backend connesso', 'success');
+    } else {
+      throw new Error('Backend non risponde correttamente');
     }
   } catch (error) {
-    showStatus('⚠️ Backend non raggiungibile. Usando dati demo.', 'warning');
+    document.getElementById('server-status').textContent = 'Non connesso';
+    document.getElementById('server-status').style.color = 'red';
+    showStatus('⚠️ Backend non raggiungibile. Verifica che il backend sia online.', 'warning');
   }
 }
   </script>
