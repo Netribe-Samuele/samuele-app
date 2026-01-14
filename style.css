@@ -48,6 +48,10 @@ h1 {
   margin-top: 5px;
 }
 
+.text{
+  font-family: Arial, sans-serif;
+}
+
 /* Bottone Facebook allargato */
 #fb-login-btn {
   display: block;
