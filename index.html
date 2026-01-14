@@ -2,71 +2,324 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Login Facebook</title>
-  
+  <title>Meta Graph API Dashboard</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css">
- </head>
+  <style>
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .page-list { margin: 20px 0; }
+    .page-item { 
+      background: #f5f5f5; 
+      padding: 10px; 
+      margin: 5px 0; 
+      border-radius: 4px; 
+      cursor: pointer;
+    }
+    .page-item:hover { background: #e0e0e0; }
+    .page-item.active { background: #007bff; color: white; }
+    .section { margin: 30px 0; }
+    .btn { 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      margin: 5px;
+    }
+    .btn:hover { background: #0056b3; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    .output { 
+      background: #f8f9fa; 
+      padding: 15px; 
+      border-radius: 5px; 
+      margin-top: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+    .status { 
+      padding: 10px; 
+      margin: 10px 0; 
+      border-radius: 4px; 
+    }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .status.info { background: #d1ecf1; color: #0c5460; }
+    .loading { color: #6c757d; font-style: italic; }
+  </style>
+</head>
 <body>
-  
-<div class="container">
-  <h1 id="titolo">Login con Facebook</h1>
-
-  <div class="subtitle">
-    Accesso alle Pagine Facebook tramite Graph API
+  <div class="container">
+    <h1>📱 Meta Graph API Dashboard</h1>
+    
+    <!-- Sezione 1: Login Facebook -->
+    <div class="section">
+      <h2>1. Login con Facebook</h2>
+      <p>Accedi per ottenere l'accesso alle tue pagine Facebook.</p>
+      <button id="fb-login-btn" class="btn" disabled>Accedi con Facebook</button>
+      <div id="login-status" class="status"></div>
+    </div>
+    
+    <!-- Sezione 2: Selezione Pagina -->
+    <div class="section" id="page-section" style="display: none;">
+      <h2>2. Seleziona una Pagina</h2>
+      <div id="page-list" class="page-list"></div>
+      <div id="selected-page" class="status info"></div>
+    </div>
+    
+    <!-- Sezione 3: Azioni disponibili -->
+    <div class="section" id="actions-section" style="display: none;">
+      <h2>3. Azioni disponibili</h2>
+      <div>
+        <button class="btn" onclick="listPostIds()">📋 Lista ID Post</button>
+        <button class="btn" onclick="getPostsWithComments()">📝 Ultimi Post con Commenti</button>
+        <input type="text" id="post-id-input" placeholder="ID Post (es: 123_456)" style="padding: 8px; margin: 5px;">
+        <button class="btn" onclick="readSpecificPost()">🔍 Leggi Post Specifico</button>
+      </div>
+      <div id="action-status" class="status"></div>
+    </div>
+    
+    <!-- Sezione 4: Output -->
+    <div class="section">
+      <h2>📊 Risultati</h2>
+      <pre id="output" class="output">Effettua il login e seleziona un'azione.</pre>
+    </div>
+    
+    <!-- Informazioni server -->
+    <div class="footer">
+      <small>Server: <span id="server-status">Non connesso</span></small>
+    </div>
   </div>
 
-  <button id="fb-login-btn" disabled>Accedi con Facebook</button>
-
-
-  <pre id="output">Effettua il login per vedere i tuoi dati.</pre>
-
-  
-  <div class="footer">
-    Modalità sviluppo · Solo admin/tester
-  </div>
-</div>
-  
   <!-- Facebook SDK -->
   <div id="fb-root"></div>
-<script>
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '893895106664116',
-      cookie     : true,
-      xfbml      : false,
-      version    : 'v19.0'
-    });
-
-    document.getElementById('fb-login-btn').disabled = false;
-  };
-
-  (function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = "https://connect.facebook.net/it_IT/sdk.js";
-    fjs.parentNode.insertBefore(js, fjs);
-  }(document, 'script', 'facebook-jssdk'));
-
-  document.getElementById('fb-login-btn').addEventListener('click', function() {
-    FB.login(function(response) {
-      if (!response.authResponse) {
-        document.getElementById('output').textContent = 'Login annullato';
-        return;
-      }
-
-      FB.api('/me/accounts', function(pages) {
-        document.getElementById('output').textContent =
-          JSON.stringify(pages, null, 2);
+  <script>
+    // Configurazione
+    const API_BASE_URL = window.location.origin; // Usa lo stesso host del frontend
+    
+    // Stato dell'applicazione
+    let userAccessToken = '';
+    let selectedPage = null;
+    let pages = [];
+    
+    // ========== INIZIALIZZAZIONE FACEBOOK SDK ==========
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId: '893895106664116', // Sostituisci con il tuo App ID se necessario
+        cookie: true,
+        xfbml: false,
+        version: 'v19.0'
       });
+      
+      // Controlla se già loggato
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          onLoginSuccess(response);
+        } else {
+          document.getElementById('fb-login-btn').disabled = false;
+        }
+      });
+    };
 
-    }, {
-      scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,business_management'
+    // Carica SDK
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/it_IT/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    // ========== FUNZIONI LOGIN ==========
+    document.getElementById('fb-login-btn').addEventListener('click', function() {
+      FB.login(function(response) {
+        if (!response.authResponse) {
+          showStatus('Login annullato', 'error');
+          return;
+        }
+        onLoginSuccess(response);
+      }, {
+        scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,business_management'
+      });
     });
-  });
-</script>
 
+    function onLoginSuccess(response) {
+      userAccessToken = response.authResponse.accessToken;
+      showStatus('Login effettuato con successo!', 'success');
+      
+      // Ottieni le pagine gestite
+      FB.api('/me/accounts', function(response) {
+        if (response.error) {
+          showStatus('Errore nel recupero pagine: ' + response.error.message, 'error');
+          return;
+        }
+        
+        pages = response.data;
+        displayPages(pages);
+        
+        // Mostra sezione pagine
+        document.getElementById('page-section').style.display = 'block';
+        showStatus(`Trovate ${pages.length} pagine`, 'info');
+      });
+    }
 
+    // ========== GESTIONE PAGINE ==========
+    function displayPages(pages) {
+      const container = document.getElementById('page-list');
+      container.innerHTML = '';
+      
+      pages.forEach(page => {
+        const div = document.createElement('div');
+        div.className = 'page-item';
+        div.innerHTML = `
+          <strong>${page.name}</strong> (${page.id})
+          <br><small>Token: ${page.access_token.substring(0, 20)}...</small>
+        `;
+        
+        div.onclick = () => selectPage(page);
+        container.appendChild(div);
+      });
+    }
+
+    function selectPage(page) {
+      selectedPage = page;
+      
+      // Rimuovi classe active da tutte le pagine
+      document.querySelectorAll('.page-item').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Aggiungi classe active alla pagina selezionata
+      event.target.closest('.page-item').classList.add('active');
+      
+      // Mostra pagina selezionata
+      document.getElementById('selected-page').innerHTML = `
+        <strong>Pagina selezionata:</strong> ${page.name} (${page.id})
+      `;
+      
+      // Mostra sezione azioni
+      document.getElementById('actions-section').style.display = 'block';
+      showActionStatus('Seleziona un\'azione dalla barra sopra', 'info');
+    }
+
+    // ========== CHIAMATE AL BACKEND ==========
+    async function callBackend(endpoint, data) {
+      showActionStatus('Caricamento...', 'info');
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Errore del server');
+        }
+        
+        showActionStatus('Operazione completata con successo!', 'success');
+        return result;
+      } catch (error) {
+        showActionStatus(`Errore: ${error.message}`, 'error');
+        throw error;
+      }
+    }
+
+    // ========== AZIONI DISPONIBILI ==========
+    async function listPostIds() {
+      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
+      
+      try {
+        const result = await callBackend('list-post-ids', {
+          pageAccessToken: selectedPage.access_token,
+          page: selectedPage.id,
+          limit: 25
+        });
+        
+        document.getElementById('output').textContent = 
+          `ID Post trovati: ${result.ids.length}\n\n` +
+          JSON.stringify(result.ids, null, 2);
+      } catch (error) {
+        document.getElementById('output').textContent = `Errore: ${error.message}`;
+      }
+    }
+
+    async function getPostsWithComments() {
+      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
+      
+      try {
+        const result = await callBackend('posts-with-comments', {
+          pageAccessToken: selectedPage.access_token,
+          page: selectedPage.id,
+          postLimit: 5,
+          commentLimit: 10
+        });
+        
+        document.getElementById('output').textContent = 
+          `Post totali: ${result.totalPosts}\n` +
+          `Post con commenti: ${result.postsWithComments.length}\n\n` +
+          JSON.stringify(result.postsWithComments, null, 2);
+      } catch (error) {
+        document.getElementById('output').textContent = `Errore: ${error.message}`;
+      }
+    }
+
+    async function readSpecificPost() {
+      if (!selectedPage) return showActionStatus('Seleziona prima una pagina', 'error');
+      
+      const postId = document.getElementById('post-id-input').value.trim();
+      if (!postId) return showActionStatus('Inserisci un ID post', 'error');
+      
+      try {
+        const result = await callBackend('read-post', {
+          pageAccessToken: selectedPage.access_token,
+          postId: postId
+        });
+        
+        const output = `
+POST:
+${JSON.stringify(result.post, null, 2)}
+
+COMMENTI (${result.comments.length}):
+${JSON.stringify(result.comments, null, 2)}
+        `;
+        
+        document.getElementById('output').textContent = output;
+      } catch (error) {
+        document.getElementById('output').textContent = `Errore: ${error.message}`;
+      }
+    }
+
+    // ========== UTILITY ==========
+    function showStatus(message, type = 'info') {
+      const element = document.getElementById('login-status');
+      element.textContent = message;
+      element.className = `status ${type}`;
+    }
+
+    function showActionStatus(message, type = 'info') {
+      const element = document.getElementById('action-status');
+      element.textContent = message;
+      element.className = `status ${type}`;
+    }
+
+    // Controlla stato server all'avvio
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+        if (response.ok) {
+          document.getElementById('server-status').textContent = 'Connesso';
+          document.getElementById('server-status').style.color = 'green';
+        }
+      } catch {
+        document.getElementById('server-status').textContent = 'Non connesso';
+        document.getElementById('server-status').style.color = 'red';
+      }
+    });
+  </script>
 </body>
 </html>
