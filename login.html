@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Meta Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error { background: #fee; color: #c33; padding: 12px; border-radius: 8px; margin: 20px 0; display: none; }
+        .info { background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🔐 Meta Dashboard</h1>
+        <p class="subtitle">Accesso riservato al personale autorizzato</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="s.bertele@netribegroup.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="NetribeAPI26!" required>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+            
+            <button type="submit" id="loginBtn">
+                <span id="btnText">Accedi al Dashboard</span>
+                <span id="btnSpinner" style="display:none;">⌛ Verifica...</span>
+            </button>
+        </form>
+        
+        <div class="info">
+            <strong>Credenziali demo:</strong><br>
+            Email: s.bertele@netribegroup.com<br>
+            Password: NetribeAPI26!
+        </div>
+    </div>
+
+    <script>
+        // Configurazione
+        const VALID_EMAILS = ["s.bertele@netribegroup.com"];
+        const VALID_PASSWORD = "NetribeAPI26!";
+        
+        // Elementi DOM
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        
+        // Funzione di verifica
+        function checkLogin(email, password) {
+            return VALID_EMAILS.includes(email) && password === VALID_PASSWORD;
+        }
+        
+        // Gestione submit
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Mostra loading
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline';
+            loginBtn.disabled = true;
+            errorMsg.style.display = 'none';
+            
+            // Simula verifica
+            setTimeout(() => {
+                if (checkLogin(email, password)) {
+                    console.log('✅ Accesso autorizzato');
+                    
+                    // Salva stato login
+                    sessionStorage.setItem('auth_email', email);
+                    sessionStorage.setItem('auth_time', Date.now());
+                    
+                    // Redirect alla dashboard
+                    window.location.href = 'index.html';
+                } else {
+                    console.log('❌ Accesso negato');
+                    
+                    // Mostra errore
+                    errorMsg.textContent = 'Email o password non validi';
+                    errorMsg.style.display = 'block';
+                    
+                    // Pulisci e focus
+                    passwordInput.value = '';
+                    emailInput.focus();
+                    
+                    // Ripristina bottone
+                    btnText.style.display = 'inline';
+                    btnSpinner.style.display = 'none';
+                    loginBtn.disabled = false;
+                }
+            }, 800);
+        });
+        
+        // Auto-focus
+        document.addEventListener('DOMContentLoaded', function() {
+            emailInput.focus();
+            
+            // Se già autenticato, redirect
+            const authEmail = sessionStorage.getItem('auth_email');
+            if (authEmail && VALID_EMAILS.includes(authEmail)) {
+                const authTime = parseInt(sessionStorage.getItem('auth_time'));
+                const hoursSinceLogin = (Date.now() - authTime) / (1000 * 60 * 60);
+                
+                // Se meno di 8 ore, auto-redirect
+                if (hoursSinceLogin < 8) {
+                    window.location.href = 'index.html';
+                } else {
+                    // Session scaduta
+                    sessionStorage.clear();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
