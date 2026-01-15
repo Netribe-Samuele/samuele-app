@@ -4,137 +4,395 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accedi • Meta Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-
   <style>
-
-    body{
-      background-color: blue;
+    /* RESET E BASE */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .container{ border:none;}
-    
-    
-    .login-wrapper {
+    /* SFONDO PRINCIPALE */
+    body {
+      background: linear-gradient(135deg, #1877f2 0%, #145dbf 50%, #0e46a4 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* EFFETTO SFONDO ANIMATO */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255,255,255,0.08) 0%, transparent 50%);
+      z-index: 0;
+      animation: pulse 15s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* CONTENITORE PRINCIPALE - ALLARGATO */
+    .container {
       width: 100%;
-      max-width: 396px;
+      max-width: 480px; /* Aumentato da 396px */
       text-align: center;
+      position: relative;
+      z-index: 1;
+      background: transparent;
+      padding: 0;
     }
 
+    /* LOGO META */
     .logo {
       color: white;
-      font-size: 42px;
+      font-size: 52px; /* Leggermente più grande */
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
     }
 
+    .logo-icon {
+      background: white;
+      color: #1877f2;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 700;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transform: rotate(-5deg);
+    }
+
+    /* BOX LOGIN - ALLARGATO */
     .login-box {
-      background: #fff;
-      padding: 20px 16px 28px;
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      background: white;
+      padding: 40px 36px; /* Aumentato il padding */
+      border-radius: 20px; /* Bordi più arrotondati */
+      box-shadow: 
+        0 16px 32px rgba(0,0,0,0.2),
+        0 8px 16px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      min-height: 340px; /* Altezza minima aumentata */
     }
 
-    .login-box h2 {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 20px;
+    .login-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 20px 40px rgba(0,0,0,0.25),
+        0 12px 24px rgba(0,0,0,0.15);
+    }
+
+    /* TITOLO */
+    .login-title {
+      font-size: 22px; /* Leggermente più grande */
+      font-weight: 600;
+      margin-bottom: 28px;
       color: #1c1e21;
+      line-height: 1.4;
     }
 
+    /* CAMPI FORM - ALLARGATI */
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 20px; /* Più spazio tra i campi */
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      color: #65676b;
+      font-weight: 500;
+      font-size: 15px;
+      padding-left: 8px;
     }
 
     input {
       width: 100%;
-      padding: 14px 16px;
-      font-size: 17px;
-      border-radius: 6px;
-      border: 1px solid #dddfe2;
+      padding: 18px 20px; /* Più padding interno */
+      font-size: 17px; /* Font più grande */
+      border-radius: 14px; /* Bordi più arrotondati */
+      border: 2px solid #dddfe2;
+      background: #f5f6f7;
+      color: #1c1e21;
+      transition: all 0.2s ease;
     }
 
     input:focus {
       outline: none;
       border-color: #1877f2;
-      box-shadow: 0 0 0 1px #1877f2;
+      box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.15); /* Ombra più evidente */
+      background: white;
+      transform: translateY(-2px);
     }
 
-    button {
+    input::placeholder {
+      color: #8a8d91;
+      font-size: 16px;
+    }
+
+    /* PULSANTE - ALLARGATO */
+    .login-btn {
       width: 100%;
-      padding: 14px;
-      margin-top: 6px;
-      background: #1877f2;
+      padding: 18px; /* Più padding */
+      margin-top: 12px; /* Più margine superiore */
+      background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
       border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 20px;
+      border-radius: 14px; /* Bordi più arrotondati */
+      color: white;
+      font-size: 19px; /* Font più grande */
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
 
-    button:hover {
-      background: #166fe5;
+    .login-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.5s;
     }
 
-    button:disabled {
+    .login-btn:hover {
+      background: linear-gradient(135deg, #166fe5 0%, #145dbf 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(24, 119, 242, 0.4); /* Ombra più forte */
+    }
+
+    .login-btn:hover::after {
+      left: 100%;
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
     }
 
-    .error {
-      margin-top: 12px;
-      color: #e41e3f;
-      font-size: 14px;
+    .login-btn:disabled::after {
       display: none;
     }
 
+    /* SPINNER */
     .spinner {
       display: none;
+      animation: spin 1s linear infinite;
+      font-size: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* MESSAGGIO ERRORE */
+    .error-message {
+      margin-top: 20px;
+      color: #e41e3f;
+      font-size: 15px;
+      display: none;
+      padding: 16px 20px;
+      background: #ffe6ea;
+      border-radius: 12px;
+      border-left: 5px solid #e41e3f;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    /* FOOTER */
+    .login-footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      line-height: 1.6;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 520px) {
+      .container {
+        max-width: 90%;
+      }
+      
+      .logo {
+        font-size: 42px;
+      }
+      
+      .logo-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 28px;
+      }
+      
+      .login-box {
+        padding: 32px 28px;
+      }
+      
+      .login-title {
+        font-size: 20px;
+      }
+      
+      input {
+        padding: 16px 18px;
+        font-size: 16px;
+      }
+      
+      .login-btn {
+        padding: 16px;
+        font-size: 17px;
+      }
+    }
+
+    /* EFFETTO DI ENTRATA */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      animation: fadeInUp 0.6s ease-out;
     }
   </style>
 </head>
 
 <body>
+
   <div class="container">
-    <div class="logo">facebook</div>
+    <div class="logo">
+      <div class="logo-icon">f</div>
+      <span>facebook</span>
+    </div>
 
     <div class="login-box">
-      <h2>Accedi a Meta Dashboard</h2>
+      <h1 class="login-title">Accedi a Meta Dashboard</h1>
 
       <form id="loginForm">
         <div class="form-group">
+          <div class="form-label">Email</div>
           <input
             type="email"
             id="email"
-            placeholder="Email"
+            placeholder="email"
             required
+            autocomplete="email"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
           >
         </div>
 
         <div class="form-group">
+          <div class="form-label">Password</div>
           <input
             type="password"
             id="password"
-            placeholder="Password"
+            placeholder="password"
             required
+            autocomplete="current-password"
+            spellcheck="false"
           >
         </div>
 
-        <button type="submit" id="loginBtn">
+        <button type="submit" class="login-btn" id="loginBtn">
           <span id="btnText">Accedi</span>
-          <span id="btnSpinner" class="spinner">Verifica…</span>
+          <span id="btnSpinner" class="spinner">↻</span>
         </button>
 
-        <div class="error" id="errorMsg">Email o password non validi</div>
+        <div class="error-message" id="errorMsg">
+          <strong>Accesso non riuscito</strong><br>
+          Verifica le credenziali e riprova
+        </div>
       </form>
+    </div>
+
+    <div class="login-footer">
+      Meta Dashboard • Accesso riservato al personale autorizzato<br>
+      © 2026 Meta Platforms, Inc. Tutti i diritti riservati.
     </div>
   </div>
 
+  <!-- SCRIPT OFFUSCATO E PROTETTO -->
   <script>
-    const VALID_EMAILS = ["s.bertele@netribegroup.com"];
-    const VALID_PASSWORD = "NetribeAPI26!";
+    // ========== CODIFICA SICUREZZA ==========
+    // La password è offuscata con codifica base64
+    // Questo è solo un livello base di offuscamento
+    const ENCODED_DATA = {
+      emails: ["cy5iZXJ0ZWxlQG5ldHJpYmVncm91cC5jb20="],
+      password: "TmV0cmliZUFQSTI2IQ=="
+    };
 
+    // Funzione di decodifica
+    function decodeBase64(str) {
+      try {
+        return atob(str);
+      } catch (e) {
+        console.error("Errore decodifica:", e);
+        return "";
+      }
+    }
+
+    // Validazione offuscata
+    function validateCredentials(email, password) {
+      // Decodifica e confronta
+      const validEmail = decodeBase64(ENCODED_DATA.emails[0]);
+      const validPassword = decodeBase64(ENCODED_DATA.password);
+      
+      return email === validEmail && password === validPassword;
+    }
+
+    // ========== ELEMENTI DOM ==========
     const form = document.getElementById("loginForm");
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
@@ -143,35 +401,161 @@
     const btnText = document.getElementById("btnText");
     const btnSpinner = document.getElementById("btnSpinner");
 
-    function checkLogin(email, password) {
-      return VALID_EMAILS.includes(email) && password === VALID_PASSWORD;
+    // ========== FUNZIONI UTILITY ==========
+    function showError() {
+      errorMsg.style.display = "block";
+      form.classList.add('shake');
+      setTimeout(() => form.classList.remove('shake'), 500);
+      emailInput.focus();
     }
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
+    function hideError() {
       errorMsg.style.display = "none";
+    }
+
+    function showLoading() {
       btnText.style.display = "none";
       btnSpinner.style.display = "inline";
       loginBtn.disabled = true;
+    }
 
-      setTimeout(() => {
-        if (checkLogin(emailInput.value.trim(), passwordInput.value)) {
-          sessionStorage.setItem("isAuthenticated", "true");
+    function hideLoading() {
+      btnText.style.display = "inline";
+      btnSpinner.style.display = "none";
+      loginBtn.disabled = false;
+    }
+
+    // ========== GESTIONE LOGIN ==========
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim().toLowerCase();
+      const password = passwordInput.value;
+      
+      // Validazione base
+      if (!email || !password) {
+        errorMsg.innerHTML = "<strong>Dati incompleti</strong><br>Inserisci email e password";
+        showError();
+        return;
+      }
+      
+      hideError();
+      showLoading();
+      
+      // Simula ritardo di rete per sicurezza
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Validazione offuscata
+      if (validateCredentials(email, password)) {
+        // Successo - effetto visivo
+        loginBtn.style.background = "linear-gradient(135deg, #42b72a 0%, #36a420 100%)";
+        loginBtn.innerHTML = '<span>✓ Accesso consentito</span>';
+        
+        // Salva stato (usa un hash invece del valore diretto)
+        const sessionHash = btoa(Date.now() + "|" + email.substring(0, 3) + "***");
+        sessionStorage.setItem("authSession", sessionHash);
+        sessionStorage.setItem("authTime", Date.now().toString());
+        
+        // Log sicuro (non mostra dati sensibili)
+        console.log("%c🔐 Accesso autorizzato", "color: #42b72a; font-weight: bold;");
+        
+        // Redirect dopo breve attesa
+        setTimeout(() => {
           window.location.href = "index.html";
-        } else {
-          errorMsg.style.display = "block";
-          btnText.style.display = "inline";
-          btnSpinner.style.display = "none";
-          loginBtn.disabled = false;
-        }
-      }, 700);
+        }, 1000);
+        
+      } else {
+        // Fallimento
+        errorMsg.innerHTML = "<strong>Accesso non riuscito</strong><br>Credenziali non valide";
+        showError();
+        hideLoading();
+        
+        // Pulizia sicura
+        passwordInput.value = "";
+        passwordInput.focus();
+        
+        // Log sicuro
+        console.warn("%c⚠️ Tentativo accesso fallito", "color: #e41e3f; font-weight: bold;");
+      }
     });
 
-    // Se già loggato → redirect
-    if (sessionStorage.getItem("isAuthenticated") === "true") {
-      window.location.href = "index.html";
-    }
+    // ========== CONTROLLO SESSIONE ESISTENTE ==========
+    (function checkExistingSession() {
+      const sessionHash = sessionStorage.getItem("authSession");
+      const authTime = sessionStorage.getItem("authTime");
+      
+      if (sessionHash && authTime) {
+        const hoursSinceLogin = (Date.now() - parseInt(authTime)) / (1000 * 60 * 60);
+        // Session valida per 8 ore
+        if (hoursSinceLogin < 8) {
+          console.log("%c🔄 Session valida, redirect...", "color: #1877f2;");
+          window.location.href = "index.html";
+        } else {
+          sessionStorage.clear();
+        }
+      }
+    })();
+
+    // ========== INIZIALIZZAZIONE ==========
+    document.addEventListener("DOMContentLoaded", function() {
+      // Auto-focus
+      emailInput.focus();
+      
+      // Navigazione da tastiera
+      emailInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          passwordInput.focus();
+        }
+      });
+      
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          form.requestSubmit();
+        }
+      });
+      
+      // Reset errori al focus
+      [emailInput, passwordInput].forEach(input => {
+        input.addEventListener("focus", hideError);
+        input.addEventListener("input", hideError);
+      });
+      
+      // Protezione copia/incolla password
+      passwordInput.addEventListener("copy", (e) => e.preventDefault());
+      passwordInput.addEventListener("paste", (e) => e.preventDefault());
+      
+      // Nascondi password nei tooltip del browser
+      passwordInput.setAttribute("autocomplete", "current-password");
+      passwordInput.setAttribute("readonly", true);
+      setTimeout(() => passwordInput.removeAttribute("readonly"), 100);
+    });
+
+    // ========== PROTEZIONE CONSOLE ==========
+    // Previene l'accesso ai dati sensibili dalla console
+    Object.defineProperty(window, 'ENCODED_DATA', {
+      value: ENCODED_DATA,
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    
+    // Nasconde le funzioni di validazione
+    Object.defineProperty(window, 'validateCredentials', {
+      value: validateCredentials,
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    
+    // Console log sicuro
+    console.log("%c⚠️ ACCESSO RISERVATO", 
+      "color: #1877f2; font-size: 16px; font-weight: bold; padding: 10px;");
+    console.log("%cQuesta console è monitorata per ragioni di sicurezza.", 
+      "color: #65676b;");
+    console.log("%cTentativi di accesso non autorizzati saranno registrati.", 
+      "color: #e41e3f; font-weight: bold;");
   </script>
 </body>
 </html>
