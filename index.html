@@ -39,21 +39,16 @@
   </style>
 </head>
 <body>
-<script>
-  // ====== PROTEZIONE ACCESSO ======
-  (function () {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-
-    if (isAuthenticated !== "true") {
-      // Non loggato → torna al login
-      window.location.href = "Login.tsx";
-    }
-  })();
-</script>
+  
+  <div id="authCheck"></div>
 
     <div class="container">
     <h1>Meta Graph API Dashboard</h1>
-    
+    <div class="section">
+            <h2>Benvenuto</h2>
+            <p id="userWelcome">Caricamento...</p>
+            <button onclick="logout()" class="btn">Logout</button>
+        </div>
     <!-- Sezione 1: Login Facebook -->
     <div class="section">
       <h2>1. Login con Facebook</h2>
@@ -111,367 +106,414 @@
   <!-- Facebook SDK -->
   <div id="fb-root"></div>
 
-  <script>
-  // ========== CONFIGURAZIONE ==========
-const API_BASE_URL = "https://meta-graph-api-backend.onrender.com";
-    
-// ========== STATO APPLICAZIONE ==========
-let selectedPage = null;
-let pages = [];
-let userAccessToken = '';
 
-// ========== INIZIALIZZAZIONE FACEBOOK SDK (SOLO PER LOGIN) ==========
-window.fbAsyncInit = function() {
-  console.log('Facebook SDK caricato - Solo per login');
-  
-  // IMPORTANTE: xfbml false e status false
-  FB.init({
-    appId: '893895106664116',
-    cookie: true,
-    xfbml: false,  // Disabilita widget automatici
-    version: 'v19.0'
-  });
-  
-  // Abilita il bottone login
-  document.getElementById('fb-login-btn').disabled = false;
-  console.log('Bottone login abilitato');
-  
-  // NON controllare lo stato login automaticamente
-  // Evita che FB.setAccessToken venga chiamato automaticamente
-};
-
-// Carica SDK Facebook
-(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "https://connect.facebook.net/it_IT/sdk.js";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
-
-// ========== FUNZIONI LOGIN (SOLO PER OTTENERE TOKEN) ==========
-document.getElementById('fb-login-btn').addEventListener('click', function() {
-  // Disabilita subito per evitere doppi click
-  this.disabled = true;
-  showStatus('Avvio login...', 'info');
-  
-  FB.login(function(response) {
-    console.log('Risposta login:', response);
-    
-    // Riabilita il bottone
-    document.getElementById('fb-login-btn').disabled = false;
-    
-    if (!response.authResponse) {
-      showStatus('Login annullato', 'error');
-      return;
-    }
-    
-    // Ottieni il token ma NON usare FB.setAccessToken
-    const accessToken = response.authResponse.accessToken;
-    userAccessToken = accessToken;
-    
-    // Usa immediatamente fetch per ottenere le pagine
-    fetchPagesWithToken(accessToken);
-    
-  }, {
-    scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,business_management'
-  });
-});
-
-// ========== OTTIENI PAGINE USANDO FETCH (NO FB.api) ==========
-async function fetchPagesWithToken(accessToken) {
-  showStatus('Recupero pagine...', 'info');
-  
-  try {
-    // Usa fetch invece di FB.api per evitare FB.setAccessToken
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/me/accounts?access_token=${accessToken}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Errore Graph API: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Pagine ottenute via fetch:', data);
-    
-    if (data.error) {
-      showStatus('Errore Facebook: ' + data.error.message, 'error');
-      return;
-    }
-    
-    pages = data.data || [];
-    displayPages(pages);
-    
-    if (pages.length > 0) {
-      document.getElementById('page-section').style.display = 'block';
-      showStatus(`✅ Trovate ${pages.length} pagine`, 'success');
-    } else {
-      showStatus('Nessuna pagina trovata. Sei amministratore di una pagina?', 'warning');
-    }
-    
-  } catch (error) {
-    console.error('Errore fetch pagine:', error);
-    showStatus('Errore nel recupero pagine: ' + error.message, 'error');
-  }
-}
-
-// ========== GESTIONE PAGINE ==========
-function displayPages(pages) {
-  const container = document.getElementById('page-list');
-  container.innerHTML = '';
-  
-  if (pages.length === 0) {
-    container.innerHTML = '<div class="status warning">Nessuna pagina trovata.</div>';
-    return;
-  }
-  
-  pages.forEach(page => {
-    const div = document.createElement('div');
-    div.className = 'page-item';
-    div.innerHTML = `
-      <div class="page-info">
-        <strong>${page.name}</strong>
-        <div class="page-id">ID: ${page.id}</div>
-      </div>
-      <div class="page-token">Token: ${page.access_token.substring(0, 20)}...</div>
-    `;
-    
-    div.onclick = () => selectPage(page);
-    container.appendChild(div);
-  });
-}
-
-function selectPage(page) {
-  selectedPage = page;
-  
-  // Rimuovi selezione da tutte le pagine
-  document.querySelectorAll('.page-item').forEach(el => {
-    el.classList.remove('active');
-  });
-  
-  // Aggiungi selezione alla pagina cliccata
-  event.currentTarget.classList.add('active');
-  
-  // Mostra pagina selezionata
-  document.getElementById('selected-page').innerHTML = `
-    <strong>Pagina selezionata:</strong> ${page.name} (${page.id})
-  `;
-  
-  // Mostra sezione azioni
-  document.getElementById('actions-section').style.display = 'block';
-  showActionStatus('Seleziona un\'azione', 'info');
-}
-
-// ========== FUNZIONI DEI BOTTONI ==========
-async function listPostIds() {
-  if (!selectedPage) {
-    showActionStatus('Seleziona prima una pagina', 'error');
-    return;
-  }
-  
-  showActionStatus('Caricamento post...', 'info');
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/list-post-ids`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pageAccessToken: selectedPage.access_token,
-        page: selectedPage.id,
-        mode: 'published_posts',
-        limit: 50
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Errore ${response.status}: ${errorText}`);
-    }
-    
-    const result = await response.json();
-    
-    const output = `📋 ID POST TROVATI (${result.ids.length})
-${'─'.repeat(50)}
-${result.ids.map(id => `• ${id}`).join('\n')}
-${'─'.repeat(50)}
-ℹ️ Per leggere un post, copia un ID e incollalo nel campo sotto.`;
-    
-    document.getElementById('output').textContent = output;
-    showActionStatus('✅ Post caricati', 'success');
-    
-  } catch (error) {
-    document.getElementById('output').textContent = `Errore: ${error.message}`;
-    showActionStatus('❌ Errore', 'error');
-  }
-}
-
-async function getPostsWithComments() {
-  if (!selectedPage) {
-    showActionStatus('Seleziona prima una pagina', 'error');
-    return;
-  }
-  
-  showActionStatus('Caricamento post con commenti...', 'info');
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/posts-with-comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pageAccessToken: selectedPage.access_token,
-        page: selectedPage.id,
-        postLimit: 5,
-        commentLimit: 10
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Errore ${response.status}: ${errorText}`);
-    }
-    
-    const result = await response.json();
-    
-    let output = `📝 POST CON COMMENTI (${result.totalPosts || result.postsWithComments.length})
-${'─'.repeat(50)}`;
-    
-    if (result.postsWithComments && result.postsWithComments.length > 0) {
-      result.postsWithComments.forEach((post, index) => {
-        output += `\n\nPOST ${index + 1}
-ID: ${post.id}
-Data: ${new Date(post.created_time).toLocaleString('it-IT')}
-Messaggio: ${post.message ? post.message.substring(0, 100) + (post.message.length > 100 ? '...' : '') : '(Nessun messaggio)'}
-Commenti: ${post.comments ? post.comments.length : 0}`;
+    <script>
+        // ========== VERIFICA SESSIONE ==========
+        (function checkAuth() {
+            const validEmails = ["s.bertele@netribegroup.com"];
+            const authEmail = sessionStorage.getItem('auth_email');
+            const authTime = sessionStorage.getItem('auth_time');
+            
+            // Se non c'è sessione o email non valida, redirect
+            if (!authEmail || !validEmails.includes(authEmail)) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verifica scadenza (8 ore)
+            if (authTime) {
+                const hoursSinceLogin = (Date.now() - parseInt(authTime)) / (1000 * 60 * 60);
+                if (hoursSinceLogin > 8) {
+                    sessionStorage.clear();
+                    window.location.href = 'login.html';
+                    return;
+                }
+            }
+            
+            // Utente autorizzato, mostra dashboard
+            document.getElementById('userWelcome').textContent = 
+                `Accesso come: ${authEmail}`;
+                
+            console.log('✅ Dashboard accessibile');
+        })();
         
-        if (post.comments && post.comments.length > 0) {
-          post.comments.slice(0, 3).forEach((comment, commentIndex) => {
-            output += `\n  💬 ${commentIndex + 1}: ${comment.message ? comment.message.substring(0, 50) + (comment.message.length > 50 ? '...' : '') : '(Nessun testo)'}`;
-          });
-          if (post.comments.length > 3) output += `\n  ... e altri ${post.comments.length - 3} commenti`;
+        // Funzione logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                sessionStorage.clear();
+                window.location.href = 'login.html';
+            }
         }
-        output += `\n${'─'.repeat(50)}`;
+        
+        // Proteggi da refresh accidentale
+        window.addEventListener('beforeunload', function(e) {
+            // Opzionale: chiedi conferma se si esce
+            // e.returnValue = 'Sei sicuro di voler uscire?';
+        });
+    </script>
+
+  
+  <script>
+    // ========== CONFIGURAZIONE ==========
+      const API_BASE_URL = "https://meta-graph-api-backend.onrender.com";
+          
+      // ========== STATO APPLICAZIONE ==========
+      let selectedPage = null;
+      let pages = [];
+      let userAccessToken = '';
+      
+      // ========== INIZIALIZZAZIONE FACEBOOK SDK (SOLO PER LOGIN) ==========
+      window.fbAsyncInit = function() {
+        console.log('Facebook SDK caricato - Solo per login');
+        
+        // IMPORTANTE: xfbml false e status false
+        FB.init({
+          appId: '893895106664116',
+          cookie: true,
+          xfbml: false,  // Disabilita widget automatici
+          version: 'v19.0'
+        });
+        
+        // Abilita il bottone login
+        document.getElementById('fb-login-btn').disabled = false;
+        console.log('Bottone login abilitato');
+        
+        // NON controllare lo stato login automaticamente
+        // Evita che FB.setAccessToken venga chiamato automaticamente
+      };
+      
+      // Carica SDK Facebook
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/it_IT/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+      
+      // ========== FUNZIONI LOGIN (SOLO PER OTTENERE TOKEN) ==========
+      document.getElementById('fb-login-btn').addEventListener('click', function() {
+        // Disabilita subito per evitere doppi click
+        this.disabled = true;
+        showStatus('Avvio login...', 'info');
+        
+        FB.login(function(response) {
+          console.log('Risposta login:', response);
+          
+          // Riabilita il bottone
+          document.getElementById('fb-login-btn').disabled = false;
+          
+          if (!response.authResponse) {
+            showStatus('Login annullato', 'error');
+            return;
+          }
+          
+          // Ottieni il token ma NON usare FB.setAccessToken
+          const accessToken = response.authResponse.accessToken;
+          userAccessToken = accessToken;
+          
+          // Usa immediatamente fetch per ottenere le pagine
+          fetchPagesWithToken(accessToken);
+          
+        }, {
+          scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,business_management'
+        });
       });
-    } else {
-      output += '\nNessun post con commenti trovato.';
-    }
-    
-    document.getElementById('output').textContent = output;
-    showActionStatus('✅ Post con commenti caricati', 'success');
-    
-  } catch (error) {
-    document.getElementById('output').textContent = `Errore: ${error.message}`;
-    showActionStatus('❌ Errore', 'error');
-  }
-}
-
-async function readSpecificPost() {
-  if (!selectedPage) {
-    showActionStatus('Seleziona prima una pagina', 'error');
-    return;
-  }
-  
-  const postId = document.getElementById('post-id-input').value.trim();
-  if (!postId) {
-    showActionStatus('Inserisci un ID post', 'error');
-    return;
-  }
-  
-  showActionStatus('Caricamento post...', 'info');
-  
-  try { 
-    const response = await fetch(`${API_BASE_URL}/api/read-post`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pageAccessToken: selectedPage.access_token,
-        postId: postId
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Errore ${response.status}: ${errorText}`);
-    }
-    
-    const result = await response.json();
-    
-    if (result.error) {
-      throw new Error(result.error);
-    }
-    
-    const output = `📝 POST
-ID: ${result.post.id}
-Data: ${new Date(result.post.created_time).toLocaleString('it-IT')}
-URL: ${result.post.permalink_url || 'N/A'}
-Messaggio: ${result.post.message || '(Nessun messaggio)'}
-${'─'.repeat(50)}
-💬 COMMENTI (${result.totalComments || result.comments?.length || 0})
-${'─'.repeat(50)}
-${result.comments && result.comments.length > 0 ? result.comments.map((comment, index) => {
-  return `#${index + 1}
-ID: ${comment.id}
-Data: ${new Date(comment.created_time).toLocaleString('it-IT')}
-Testo: ${comment.message || '(Commento vuoto)'}
-${'─'.repeat(30)}`;
-}).join('\n\n') : 'Nessun commento trovato.'}`;
-    
-    document.getElementById('output').textContent = output;
-    showActionStatus('✅ Post caricato con successo', 'success');
-    
-  } catch (error) {
-    const errorMessage = `❌ ERRORE
-Messaggio: ${error.message}
-
-💡 SUGGERIMENTI:
-1. Verifica che il backend sia online: ${API_BASE_URL}
-2. Controlla che l'ID post sia corretto
-3. Assicurati di avere i permessi sulla pagina
-4. Il token della pagina potrebbe essere scaduto`;
-
-    document.getElementById('output').textContent = errorMessage;
-    showActionStatus('❌ Errore', 'error');
-  }
-}
-
-// ========== FUNZIONI UTILITY ==========
-function showStatus(message, type = 'info') {
-  const element = document.getElementById('login-status');
-  element.textContent = message;
-  element.className = `status ${type}`;
-}
-
-function showActionStatus(message, type = 'info') {
-  const element = document.getElementById('action-status');
-  element.textContent = message;
-  element.className = `status ${type}`;
-}
-
-// ========== INIZIALIZZAZIONE ==========
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('Pagina caricata');
-  
-  // Controlla se il backend è online
-  checkBackendStatus();
-});
-
-async function checkBackendStatus() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/health`);
-    if (response.ok) {
-      const data = await response.json();
-      document.getElementById('server-status').textContent = 'Connesso';
-      document.getElementById('server-status').style.color = 'green';
-      showStatus('✅ Backend connesso', 'success');
-    } else {
-      throw new Error('Backend non risponde correttamente');
-    }
-  } catch (error) {
-    document.getElementById('server-status').textContent = 'Non connesso';
-    document.getElementById('server-status').style.color = 'red';
-    showStatus('⚠️ Backend non raggiungibile. Verifica che il backend sia online.', 'warning');
-  }
-}
+      
+      // ========== OTTIENI PAGINE USANDO FETCH (NO FB.api) ==========
+      async function fetchPagesWithToken(accessToken) {
+        showStatus('Recupero pagine...', 'info');
+        
+        try {
+          // Usa fetch invece di FB.api per evitare FB.setAccessToken
+          const response = await fetch(
+            `https://graph.facebook.com/v19.0/me/accounts?access_token=${accessToken}`
+          );
+          
+          if (!response.ok) {
+            throw new Error(`Errore Graph API: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Pagine ottenute via fetch:', data);
+          
+          if (data.error) {
+            showStatus('Errore Facebook: ' + data.error.message, 'error');
+            return;
+          }
+          
+          pages = data.data || [];
+          displayPages(pages);
+          
+          if (pages.length > 0) {
+            document.getElementById('page-section').style.display = 'block';
+            showStatus(`✅ Trovate ${pages.length} pagine`, 'success');
+          } else {
+            showStatus('Nessuna pagina trovata. Sei amministratore di una pagina?', 'warning');
+          }
+          
+        } catch (error) {
+          console.error('Errore fetch pagine:', error);
+          showStatus('Errore nel recupero pagine: ' + error.message, 'error');
+        }
+      }
+      
+      // ========== GESTIONE PAGINE ==========
+      function displayPages(pages) {
+        const container = document.getElementById('page-list');
+        container.innerHTML = '';
+        
+        if (pages.length === 0) {
+          container.innerHTML = '<div class="status warning">Nessuna pagina trovata.</div>';
+          return;
+        }
+        
+        pages.forEach(page => {
+          const div = document.createElement('div');
+          div.className = 'page-item';
+          div.innerHTML = `
+            <div class="page-info">
+              <strong>${page.name}</strong>
+              <div class="page-id">ID: ${page.id}</div>
+            </div>
+            <div class="page-token">Token: ${page.access_token.substring(0, 20)}...</div>
+          `;
+          
+          div.onclick = () => selectPage(page);
+          container.appendChild(div);
+        });
+      }
+      
+      function selectPage(page) {
+        selectedPage = page;
+        
+        // Rimuovi selezione da tutte le pagine
+        document.querySelectorAll('.page-item').forEach(el => {
+          el.classList.remove('active');
+        });
+        
+        // Aggiungi selezione alla pagina cliccata
+        event.currentTarget.classList.add('active');
+        
+        // Mostra pagina selezionata
+        document.getElementById('selected-page').innerHTML = `
+          <strong>Pagina selezionata:</strong> ${page.name} (${page.id})
+        `;
+        
+        // Mostra sezione azioni
+        document.getElementById('actions-section').style.display = 'block';
+        showActionStatus('Seleziona un\'azione', 'info');
+      }
+      
+      // ========== FUNZIONI DEI BOTTONI ==========
+      async function listPostIds() {
+        if (!selectedPage) {
+          showActionStatus('Seleziona prima una pagina', 'error');
+          return;
+        }
+        
+        showActionStatus('Caricamento post...', 'info');
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/list-post-ids`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pageAccessToken: selectedPage.access_token,
+              page: selectedPage.id,
+              mode: 'published_posts',
+              limit: 50
+            })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Errore ${response.status}: ${errorText}`);
+          }
+          
+          const result = await response.json();
+          
+          const output = `📋 ID POST TROVATI (${result.ids.length})
+      ${'─'.repeat(50)}
+      ${result.ids.map(id => `• ${id}`).join('\n')}
+      ${'─'.repeat(50)}
+      ℹ️ Per leggere un post, copia un ID e incollalo nel campo sotto.`;
+          
+          document.getElementById('output').textContent = output;
+          showActionStatus('✅ Post caricati', 'success');
+          
+        } catch (error) {
+          document.getElementById('output').textContent = `Errore: ${error.message}`;
+          showActionStatus('❌ Errore', 'error');
+        }
+      }
+      
+      async function getPostsWithComments() {
+        if (!selectedPage) {
+          showActionStatus('Seleziona prima una pagina', 'error');
+          return;
+        }
+        
+        showActionStatus('Caricamento post con commenti...', 'info');
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/posts-with-comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pageAccessToken: selectedPage.access_token,
+              page: selectedPage.id,
+              postLimit: 5,
+              commentLimit: 10
+            })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Errore ${response.status}: ${errorText}`);
+          }
+          
+          const result = await response.json();
+          
+          let output = `📝 POST CON COMMENTI (${result.totalPosts || result.postsWithComments.length})
+      ${'─'.repeat(50)}`;
+          
+          if (result.postsWithComments && result.postsWithComments.length > 0) {
+            result.postsWithComments.forEach((post, index) => {
+              output += `\n\nPOST ${index + 1}
+      ID: ${post.id}
+      Data: ${new Date(post.created_time).toLocaleString('it-IT')}
+      Messaggio: ${post.message ? post.message.substring(0, 100) + (post.message.length > 100 ? '...' : '') : '(Nessun messaggio)'}
+      Commenti: ${post.comments ? post.comments.length : 0}`;
+              
+              if (post.comments && post.comments.length > 0) {
+                post.comments.slice(0, 3).forEach((comment, commentIndex) => {
+                  output += `\n  💬 ${commentIndex + 1}: ${comment.message ? comment.message.substring(0, 50) + (comment.message.length > 50 ? '...' : '') : '(Nessun testo)'}`;
+                });
+                if (post.comments.length > 3) output += `\n  ... e altri ${post.comments.length - 3} commenti`;
+              }
+              output += `\n${'─'.repeat(50)}`;
+            });
+          } else {
+            output += '\nNessun post con commenti trovato.';
+          }
+          
+          document.getElementById('output').textContent = output;
+          showActionStatus('✅ Post con commenti caricati', 'success');
+          
+        } catch (error) {
+          document.getElementById('output').textContent = `Errore: ${error.message}`;
+          showActionStatus('❌ Errore', 'error');
+        }
+      }
+      
+      async function readSpecificPost() {
+        if (!selectedPage) {
+          showActionStatus('Seleziona prima una pagina', 'error');
+          return;
+        }
+        
+        const postId = document.getElementById('post-id-input').value.trim();
+        if (!postId) {
+          showActionStatus('Inserisci un ID post', 'error');
+          return;
+        }
+        
+        showActionStatus('Caricamento post...', 'info');
+        
+        try { 
+          const response = await fetch(`${API_BASE_URL}/api/read-post`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pageAccessToken: selectedPage.access_token,
+              postId: postId
+            })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Errore ${response.status}: ${errorText}`);
+          }
+          
+          const result = await response.json();
+          
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          
+          const output = `📝 POST
+      ID: ${result.post.id}
+      Data: ${new Date(result.post.created_time).toLocaleString('it-IT')}
+      URL: ${result.post.permalink_url || 'N/A'}
+      Messaggio: ${result.post.message || '(Nessun messaggio)'}
+      ${'─'.repeat(50)}
+      💬 COMMENTI (${result.totalComments || result.comments?.length || 0})
+      ${'─'.repeat(50)}
+      ${result.comments && result.comments.length > 0 ? result.comments.map((comment, index) => {
+        return `#${index + 1}
+      ID: ${comment.id}
+      Data: ${new Date(comment.created_time).toLocaleString('it-IT')}
+      Testo: ${comment.message || '(Commento vuoto)'}
+      ${'─'.repeat(30)}`;
+      }).join('\n\n') : 'Nessun commento trovato.'}`;
+          
+          document.getElementById('output').textContent = output;
+          showActionStatus('✅ Post caricato con successo', 'success');
+          
+        } catch (error) {
+          const errorMessage = `❌ ERRORE
+      Messaggio: ${error.message}
+      
+      💡 SUGGERIMENTI:
+      1. Verifica che il backend sia online: ${API_BASE_URL}
+      2. Controlla che l'ID post sia corretto
+      3. Assicurati di avere i permessi sulla pagina
+      4. Il token della pagina potrebbe essere scaduto`;
+      
+          document.getElementById('output').textContent = errorMessage;
+          showActionStatus('❌ Errore', 'error');
+        }
+      }
+      
+      // ========== FUNZIONI UTILITY ==========
+      function showStatus(message, type = 'info') {
+        const element = document.getElementById('login-status');
+        element.textContent = message;
+        element.className = `status ${type}`;
+      }
+      
+      function showActionStatus(message, type = 'info') {
+        const element = document.getElementById('action-status');
+        element.textContent = message;
+        element.className = `status ${type}`;
+      }
+      
+      // ========== INIZIALIZZAZIONE ==========
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Pagina caricata');
+        
+        // Controlla se il backend è online
+        checkBackendStatus();
+      });
+      
+      async function checkBackendStatus() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/health`);
+          if (response.ok) {
+            const data = await response.json();
+            document.getElementById('server-status').textContent = 'Connesso';
+            document.getElementById('server-status').style.color = 'green';
+            showStatus('✅ Backend connesso', 'success');
+          } else {
+            throw new Error('Backend non risponde correttamente');
+          }
+        } catch (error) {
+          document.getElementById('server-status').textContent = 'Non connesso';
+          document.getElementById('server-status').style.color = 'red';
+          showStatus('⚠️ Backend non raggiungibile. Verifica che il backend sia online.', 'warning');
+        }
+      }
    
    </script>
 </body>
