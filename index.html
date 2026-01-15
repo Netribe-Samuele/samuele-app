@@ -39,6 +39,17 @@
   </style>
 </head>
 <body>
+<script>
+  // ====== PROTEZIONE ACCESSO ======
+  (function () {
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+
+    if (isAuthenticated !== "true") {
+      // Non loggato → torna al login
+      window.location.href = "login.html";
+    }
+  })();
+</script>
 
     <div class="container">
     <h1>Meta Graph API Dashboard</h1>
