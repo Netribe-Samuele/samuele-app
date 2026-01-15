@@ -454,7 +454,9 @@
         // Salva stato (usa un hash invece del valore diretto)
         const sessionHash = btoa(Date.now() + "|" + email.substring(0, 3) + "***");
         sessionStorage.setItem("authSession", sessionHash);
-        sessionStorage.setItem("authTime", Date.now().toString());
+        sessionStorage.setItem("auth_email", email);
+        sessionStorage.setItem("auth_time", Date.now().toString());
+
         
         // Log sicuro (non mostra dati sensibili)
         console.log("%c🔐 Accesso autorizzato", "color: #42b72a; font-weight: bold;");
