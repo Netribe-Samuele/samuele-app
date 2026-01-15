@@ -114,15 +114,22 @@
         // ========== VERIFICA SESSIONE ==========
         (function checkAuth() {
             const validEmails = ["s.bertele@netribegroup.com"];
-            const authEmail = sessionStorage.getItem('auth_email');
-            const authTime = sessionStorage.getItem('auth_time');
+            const sessionHash = sessionStorage.getItem("authSession");
+            const authTime = sessionStorage.getItem("authTime");
+
             
             // Se non c'è sessione o email non valida, redirect
             if (!authEmail || !validEmails.includes(authEmail)) {
                 window.location.href = 'login.html';
                 return;
             }
-            
+
+            if (!sessionHash) {
+              window.location.href = 'login.html';
+              return;
+            }
+
+          
             // Verifica scadenza (8 ore)
             if (authTime) {
                 const hoursSinceLogin = (Date.now() - parseInt(authTime)) / (1000 * 60 * 60);
