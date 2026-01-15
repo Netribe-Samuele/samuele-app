@@ -101,19 +101,21 @@
   <div id="fb-root"></div>
 
   <script>
-    // ========== CONFIGURAZIONE ==========
-    const API_BASE_URL = "https://meta-graph-api-backend.onrender.com"; // Rimosso slash finale
+   
+   // ========== CONFIGURAZIONE ==========
+const API_BASE_URL = "https://meta-graph-api-backend.onrender.com";
     
-    // ========== STATO APPLICAZIONE ==========
+// ========== STATO APPLICAZIONE ==========
 let selectedPage = null;
 let pages = [];
+let userAccessToken = '';
 
 // ========== INIZIALIZZAZIONE FACEBOOK SDK ==========
 window.fbAsyncInit = function() {
   console.log('Facebook SDK caricato');
   
   FB.init({
-    appId: '893895106664116', // App ID del tuo progetto
+    appId: '893895106664116',
     cookie: true,
     xfbml: false,
     version: 'v19.0'
@@ -127,7 +129,7 @@ window.fbAsyncInit = function() {
   FB.getLoginStatus(function(response) {
     console.log('Stato login:', response.status);
     if (response.status === 'connected') {
-      onLoginSuccess(response);
+      onLoginSuccess(response.authResponse.accessToken);
     }
   });
 };
@@ -149,34 +151,38 @@ document.getElementById('fb-login-btn').addEventListener('click', function() {
       showStatus('Login annullato', 'error');
       return;
     }
-    onLoginSuccess(response);
+    onLoginSuccess(response.authResponse.accessToken);
   }, {
-    scope: 'pages_show_list,pages_read_engagement,pages_read_user_content'
+    scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,business_management'
   });
 });
 
-function onLoginSuccess(response) {
+function onLoginSuccess(accessToken) {
+  userAccessToken = accessToken;
   showStatus('Login effettuato con successo!', 'success');
   
-  // Ottieni le pagine gestite
-  FB.api('/me/accounts', function(response) {
-    console.log('Pagine ottenute:', response);
-    if (response.error) {
-      showStatus('Errore nel recupero pagine: ' + response.error.message, 'error');
-      return;
+  // Ottieni le pagine gestite con il token specifico
+  FB.api(
+    '/me/accounts', 
+    { access_token: accessToken },
+    function(response) {
+      console.log('Pagine ottenute:', response);
+      if (response.error) {
+        showStatus('Errore nel recupero pagine: ' + response.error.message, 'error');
+        return;
+      }
+      
+      pages = response.data || [];
+      displayPages(pages);
+      
+      if (pages.length > 0) {
+        document.getElementById('page-section').style.display = 'block';
+        showStatus(`Trovate ${pages.length} pagine`, 'info');
+      } else {
+        showStatus('Nessuna pagina trovata. Sei amministratore di una pagina?', 'warning');
+      }
     }
-    
-    pages = response.data || [];
-    displayPages(pages);
-    
-    if (pages.length > 0) {
-      // Mostra sezione pagine
-      document.getElementById('page-section').style.display = 'block';
-      showStatus(`Trovate ${pages.length} pagine`, 'info');
-    } else {
-      showStatus('Nessuna pagina trovata. Sei amministratore di una pagina?', 'warning');
-    }
-  });
+  );
 }
 
 // ========== GESTIONE PAGINE ==========
@@ -444,6 +450,7 @@ async function checkBackendStatus() {
     showStatus('⚠️ Backend non raggiungibile. Verifica che il backend sia online.', 'warning');
   }
 }
-  </script>
+   
+   </script>
 </body>
 </html>
