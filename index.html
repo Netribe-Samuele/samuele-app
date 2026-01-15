@@ -39,10 +39,9 @@
   </style>
 </head>
 <body>
-  
-  <div id="authCheck"></div>
 
-    <div class="container">
+<div class="container" style="display:none" id="app">
+
     <h1>Meta Graph API Dashboard</h1>
 
     <!-- Sezione 1: Login Facebook -->
@@ -111,56 +110,45 @@
 
 
     <script>
-        // ========== VERIFICA SESSIONE ==========
-        (function checkAuth() {
-            const validEmails = ["s.bertele@netribegroup.com"];
-            const sessionHash = sessionStorage.getItem("authSession");
-            const authTime = sessionStorage.getItem("authTime");
+(function checkAuth() {
+  const VALID_EMAILS = ["s.bertele@netribegroup.com"];
 
-            
-            // Se non c'è sessione o email non valida, redirect
-            if (!authEmail || !validEmails.includes(authEmail)) {
-                window.location.href = 'login.html';
-                return;
-            }
+  const authEmail = sessionStorage.getItem("auth_email");
+  const authTime  = sessionStorage.getItem("auth_time");
+  const authSession = sessionStorage.getItem("authSession");
 
-            if (!sessionHash) {
-              window.location.href = 'login.html';
-              return;
-            }
+  // ❌ BLOCCO TOTALE: manca qualcosa
+  if (!authEmail || !authTime || !authSession) {
+    sessionStorage.clear();
+    window.location.replace("login.html");
+    return;
+  }
 
-          
-            // Verifica scadenza (8 ore)
-            if (authTime) {
-                const hoursSinceLogin = (Date.now() - parseInt(authTime)) / (1000 * 60 * 60);
-                if (hoursSinceLogin > 8) {
-                    sessionStorage.clear();
-                    window.location.href = 'login.html';
-                    return;
-                }
-            }
-            
-            // Utente autorizzato, mostra dashboard
-            document.getElementById('userWelcome').textContent = 
-                `Accesso come: ${authEmail}`;
-                
-            console.log('✅ Dashboard accessibile');
-        })();
-        
-        // Funzione logout
-        function logout() {
-            if (confirm('Sei sicuro di voler uscire?')) {
-                sessionStorage.clear();
-                window.location.href = 'login.html';
-            }
-        }
-        
-        // Proteggi da refresh accidentale
-        window.addEventListener('beforeunload', function(e) {
-            // Opzionale: chiedi conferma se si esce
-            // e.returnValue = 'Sei sicuro di voler uscire?';
-        });
-    </script>
+  // ❌ email non autorizzata
+  if (!VALID_EMAILS.includes(authEmail)) {
+    sessionStorage.clear();
+    window.location.replace("login.html");
+    return;
+  }
+
+  // ❌ sessione scaduta (8 ore)
+  const hoursSinceLogin =
+    (Date.now() - parseInt(authTime, 10)) / (1000 * 60 * 60);
+
+  if (hoursSinceLogin > 8) {
+    sessionStorage.clear();
+    window.location.replace("login.html");
+    return;
+  }
+
+  // ✅ UTENTE AUTORIZZATO
+  document.getElementById("userWelcome").textContent =
+    `Accesso come: ${authEmail}`;
+  document.getElementById("app").style.display = "block";
+
+  console.log("✅ Accesso autorizzato alla dashboard");
+})();
+</script>
 
   
   <script>
